@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AralQuest{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'accounts/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{% url 'home' %}">AralQuest</a>
+        <nav aria-label="Main navigation">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard_redirect' %}">Dashboard</a>
+                <a href="{% url 'profile' %}">My profile</a>
+                <form class="nav-form" method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="nav-button" type="submit">Log out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Log in</a>
+                <a class="nav-signup" href="{% url 'register' %}">Create account</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        {% if messages %}
+            <section class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <p class="message message-{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </section>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">Learn, explore, and grow with AralQuest.</footer>
+</body>
+</html>

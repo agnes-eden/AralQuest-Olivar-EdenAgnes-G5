@@ -1,0 +1,17 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Create account | AralQuest{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <p class="eyebrow">Get started</p>
+    <h1>Create your account</h1>
+    <p class="muted">Create a student account to begin your learning journey.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button button-primary" type="submit">Create account</button>
+    </form>
+    <p class="form-footnote">Teacher accounts are assigned by an administrator. Already registered? <a href="{% url 'login' %}">Log in</a>.</p>
+</section>
+{% endblock %}

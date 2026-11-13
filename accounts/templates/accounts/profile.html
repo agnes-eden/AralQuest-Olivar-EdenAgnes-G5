@@ -1,0 +1,28 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}My profile | AralQuest{% endblock %}
+
+{% block content %}
+<section class="form-card profile-card">
+    <p class="eyebrow">Account settings</p>
+    <h1>My profile</h1>
+    <p class="muted">Update your contact and learning details.</p>
+
+    {% if profile.avatar %}
+        <img class="avatar-preview" src="{{ profile.avatar.url }}" alt="Your profile photo">
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Account details</legend>
+            {{ user_form.as_p }}
+        </fieldset>
+        <fieldset>
+            <legend>Learning profile</legend>
+            {{ profile_form.as_p }}
+        </fieldset>
+        <button class="button button-primary" type="submit">Save changes</button>
+    </form>
+</section>
+{% endblock %}

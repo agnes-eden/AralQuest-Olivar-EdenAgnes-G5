@@ -1,0 +1,22 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Student dashboard | AralQuest{% endblock %}
+
+{% block content %}
+<section class="welcome-panel student-panel">
+    <p class="eyebrow">Student space</p>
+    <h1>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
+    <p>Your learning journey starts here. Keep your profile up to date as you explore AralQuest.</p>
+    <a class="button button-light" href="{% url 'profile' %}">View or update your profile</a>
+</section>
+<section class="info-grid">
+    <article class="info-card">
+        <span class="card-label">Your grade</span>
+        <strong>{% if profile.grade_level %}Grade {{ profile.grade_level }}{% else %}Not set{% endif %}</strong>
+    </article>
+    <article class="info-card">
+        <span class="card-label">School</span>
+        <strong>{{ profile.school_name|default:"Not set" }}</strong>
+    </article>
+</section>
+{% endblock %}

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import UserProfile
+from .models import LearningQuest, UserProfile
 
 
 class RegistrationForm(UserCreationForm):
@@ -43,3 +43,48 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('grade_level', 'school_name', 'avatar')
+
+
+class LearningQuestForm(forms.ModelForm):
+    class Meta:
+        model = LearningQuest
+        fields = (
+            'title',
+            'subject',
+            'grade_level',
+            'question',
+            'choice_a',
+            'choice_b',
+            'choice_c',
+            'choice_d',
+            'correct_answer',
+            'is_published',
+        )
+        widgets = {
+            'question': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        seen_choices = set()
+        for field_name in ('choice_a', 'choice_b', 'choice_c', 'choice_d'):
+            choice = cleaned_data.get(field_name)
+            if not choice:
+                continue
+            normalized_choice = choice.strip().casefold()
+            if normalized_choice in seen_choices:
+                self.add_error(field_name, 'Each answer choice must be different.')
+            else:
+                seen_choices.add(normalized_choice)
+        return cleaned_data
+
+
+class QuestAnswerForm(forms.Form):
+    answer = forms.ChoiceField(
+        label='Choose your answer',
+        widget=forms.RadioSelect,
+    )
+
+    def __init__(self, *args, quest, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['answer'].choices = quest.answer_options()

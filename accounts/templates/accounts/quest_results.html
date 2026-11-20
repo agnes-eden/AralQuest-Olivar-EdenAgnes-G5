@@ -1,0 +1,36 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Quest results | AralQuest{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Teacher results · {{ quest.get_subject_display }} · Grade {{ quest.grade_level }}</p>
+        <h1>{{ quest.title }}</h1>
+        <p class="muted">{{ attempts|length }} learner attempt{{ attempts|length|pluralize }}</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'teacher_quests' %}">Back to quests</a>
+</section>
+
+{% if attempts %}
+    <div class="table-wrap">
+        <table class="results-table">
+            <thead>
+                <tr><th>Learner</th><th>Answer</th><th>Result</th><th>Last tried</th></tr>
+            </thead>
+            <tbody>
+                {% for attempt in attempts %}
+                    <tr>
+                        <td>{{ attempt.learner.get_full_name|default:attempt.learner.username }}</td>
+                        <td>{{ attempt.get_selected_answer_display }}: {% if attempt.selected_answer == 'A' %}{{ quest.choice_a }}{% elif attempt.selected_answer == 'B' %}{{ quest.choice_b }}{% elif attempt.selected_answer == 'C' %}{{ quest.choice_c }}{% else %}{{ quest.choice_d }}{% endif %}</td>
+                        <td>{% if attempt.is_correct %}Correct · 1 point{% else %}Try again{% endif %}</td>
+                        <td>{{ attempt.updated_at|date:"M j, Y g:i a" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <section class="empty-state"><p>No learner attempts yet. Results will appear here after students try this quest.</p></section>
+{% endif %}
+{% endblock %}

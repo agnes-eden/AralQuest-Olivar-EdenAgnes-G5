@@ -6,8 +6,9 @@
 <section class="welcome-panel student-panel">
     <p class="eyebrow">Student space</p>
     <h1>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
-    <p>Your learning journey starts here. Keep your profile up to date as you explore AralQuest.</p>
+    <p>Pick a short learning quest, answer a question, and see how you did.</p>
     <a class="button button-light" href="{% url 'profile' %}">View or update your profile</a>
+    <a class="button button-light" href="{% url 'student_quests' %}">Explore quests</a>
 </section>
 <section class="info-grid">
     <article class="info-card">
@@ -17,6 +18,16 @@
     <article class="info-card">
         <span class="card-label">School</span>
         <strong>{{ profile.school_name|default:"Not set" }}</strong>
+    </article>
+    <article class="info-card">
+        <span class="card-label">Available quests</span>
+        <strong>{{ quest_count }}</strong>
+        <a href="{% url 'student_quests' %}">Choose a quest</a>
+    </article>
+    <article class="info-card">
+        <span class="card-label">Quests tried</span>
+        <strong>{{ completed_count }}</strong>
+        <a href="{% url 'student_progress' %}">View your progress</a>
     </article>
 </section>
 {% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Manage quests | AralQuest{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Teacher space</p>
+        <h1>Your learning quests</h1>
+        <p class="muted">Create short, one-question activities for Grade 3 and Grade 4 learners.</p>
+    </div>
+    <a class="button button-primary" href="{% url 'quest_create' %}">Create a quest</a>
+</section>
+
+{% if quests %}
+    <section class="quest-grid" aria-label="Your learning quests">
+        {% for quest in quests %}
+            <article class="quest-card">
+                <p class="eyebrow">{{ quest.get_subject_display }} · Grade {{ quest.grade_level }}</p>
+                <h2>{{ quest.title }}</h2>
+                <p>{{ quest.question|truncatewords:22 }}</p>
+                <p class="muted">{% if quest.is_published %}Published{% else %}Draft{% endif %} · {{ quest.attempt_count }} learner attempts</p>
+                <div class="card-actions">
+                    <a href="{% url 'quest_results' quest.pk %}">View results</a>
+                    <a href="{% url 'quest_edit' quest.pk %}">Edit</a>
+                    <a href="{% url 'quest_delete' quest.pk %}">Delete</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="empty-state">
+        <h2>No quests yet</h2>
+        <p>Create your first short activity for your students.</p>
+        <a class="button button-primary" href="{% url 'quest_create' %}">Create a quest</a>
+    </section>
+{% endif %}
+{% endblock %}

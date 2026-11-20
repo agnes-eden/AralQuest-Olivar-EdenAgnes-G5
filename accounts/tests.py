@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from .models import UserProfile
+from .models import LearningQuest, QuestAttempt, UserProfile
 
 
 User = get_user_model()
@@ -122,3 +122,177 @@ class AccountFeatureTests(TestCase):
         self.assertEqual(user.first_name, 'Updated')
         self.assertEqual(user.profile.grade_level, 4)
         self.assertEqual(other_user.first_name, '')
+
+
+class LearningQuestTests(TestCase):
+    def create_user(self, username, role):
+        user = User.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            password='Safe-Test-Password-519!',
+        )
+        UserProfile.objects.create(user=user, role=role, grade_level=3)
+        return user
+
+    def create_quest(self, creator, **overrides):
+        data = {
+            'title': 'The Number Trail',
+            'subject': 'MATH',
+            'grade_level': 3,
+            'question': 'What is 2 + 3?',
+            'choice_a': '4',
+            'choice_b': '5',
+            'choice_c': '6',
+            'choice_d': '7',
+            'correct_answer': 'B',
+        }
+        data.update(overrides)
+        return LearningQuest.objects.create(creator=creator, **data)
+
+    def test_teacher_can_create_edit_view_results_and_delete_own_quest(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        self.client.force_login(teacher)
+
+        response = self.client.post(reverse('quest_create'), {
+            'title': 'The Number Trail',
+            'subject': 'MATH',
+            'grade_level': 3,
+            'question': 'What is 2 + 3?',
+            'choice_a': '4',
+            'choice_b': '5',
+            'choice_c': '6',
+            'choice_d': '7',
+            'correct_answer': 'B',
+            'is_published': 'on',
+        })
+        self.assertRedirects(response, reverse('teacher_quests'))
+        quest = LearningQuest.objects.get(title='The Number Trail')
+        self.assertEqual(quest.creator, teacher)
+
+        QuestAttempt.objects.create(
+            learner=learner,
+            quest=quest,
+            selected_answer='B',
+            is_correct=True,
+        )
+        self.assertContains(
+            self.client.get(reverse('quest_results', args=[quest.pk])),
+            learner.username,
+        )
+
+        response = self.client.post(reverse('quest_edit', args=[quest.pk]), {
+            'title': 'Addition Trail',
+            'subject': 'MATH',
+            'grade_level': 3,
+            'question': 'What is 2 + 3?',
+            'choice_a': '4',
+            'choice_b': '5',
+            'choice_c': '6',
+            'choice_d': '7',
+            'correct_answer': 'B',
+            'is_published': 'on',
+        })
+        self.assertRedirects(response, reverse('teacher_quests'))
+        quest.refresh_from_db()
+        self.assertEqual(quest.title, 'Addition Trail')
+
+        response = self.client.post(reverse('quest_delete', args=[quest.pk]))
+        self.assertRedirects(response, reverse('teacher_quests'))
+        self.assertFalse(LearningQuest.objects.filter(pk=quest.pk).exists())
+
+    def test_student_answer_is_saved_and_only_latest_attempt_is_kept(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        quest = self.create_quest(teacher)
+        self.client.force_login(learner)
+
+        response = self.client.post(reverse('quest_play', args=[quest.pk]), {'answer': 'A'})
+        self.assertRedirects(response, reverse('quest_play', args=[quest.pk]))
+        attempt = QuestAttempt.objects.get(learner=learner, quest=quest)
+        self.assertFalse(attempt.is_correct)
+
+        self.client.post(reverse('quest_play', args=[quest.pk]), {'answer': 'B'})
+        attempt.refresh_from_db()
+        self.assertEqual(attempt.selected_answer, 'B')
+        self.assertTrue(attempt.is_correct)
+        self.assertEqual(QuestAttempt.objects.filter(learner=learner, quest=quest).count(), 1)
+
+    def test_roles_and_ownership_are_enforced(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        other_teacher = self.create_user('other_teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        quest = self.create_quest(teacher)
+
+        self.client.force_login(learner)
+        self.assertEqual(self.client.get(reverse('teacher_quests')).status_code, 302)
+        self.assertEqual(self.client.get(reverse('quest_play', args=[quest.pk])).status_code, 200)
+
+        self.client.force_login(other_teacher)
+        self.assertEqual(self.client.get(reverse('quest_edit', args=[quest.pk])).status_code, 404)
+        response = self.client.post(reverse('quest_delete', args=[quest.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(LearningQuest.objects.filter(pk=quest.pk).exists())
+
+    def test_invalid_answer_is_not_saved(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        quest = self.create_quest(teacher)
+        self.client.force_login(learner)
+
+        response = self.client.post(reverse('quest_play', args=[quest.pk]), {'answer': 'Z'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Select a valid choice')
+        self.assertFalse(QuestAttempt.objects.exists())
+
+    def test_teacher_cannot_create_quest_with_duplicate_answer_choices(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        self.client.force_login(teacher)
+
+        response = self.client.post(reverse('quest_create'), {
+            'title': 'The Number Trail',
+            'subject': 'MATH',
+            'grade_level': 3,
+            'question': 'What is 2 + 3?',
+            'choice_a': '5',
+            'choice_b': '5',
+            'choice_c': '6',
+            'choice_d': '7',
+            'correct_answer': 'A',
+            'is_published': 'on',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Each answer choice must be different.')
+        self.assertFalse(LearningQuest.objects.exists())
+
+    def test_student_sees_only_matching_published_quests_and_own_progress(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        other_learner = self.create_user('other_learner', 'STUDENT')
+        grade_three_quest = self.create_quest(teacher)
+        grade_four_quest = self.create_quest(
+            teacher,
+            title='A Grade Four Quest',
+            grade_level=4,
+        )
+        unpublished_quest = self.create_quest(
+            teacher,
+            title='A Draft Quest',
+            is_published=False,
+        )
+        QuestAttempt.objects.create(
+            learner=other_learner,
+            quest=grade_three_quest,
+            selected_answer='B',
+            is_correct=True,
+        )
+        self.client.force_login(learner)
+
+        quests_response = self.client.get(reverse('student_quests'))
+        self.assertContains(quests_response, grade_three_quest.title)
+        self.assertNotContains(quests_response, grade_four_quest.title)
+        self.assertNotContains(quests_response, unpublished_quest.title)
+        progress_response = self.client.get(reverse('student_progress'))
+        self.assertNotContains(progress_response, grade_three_quest.title)

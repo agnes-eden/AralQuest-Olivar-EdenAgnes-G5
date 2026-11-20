@@ -1,0 +1,24 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ quest.title }} | AralQuest{% endblock %}
+
+{% block content %}
+<article class="play-card">
+    <p class="eyebrow">{{ quest.get_subject_display }} · Grade {{ quest.grade_level }} quest</p>
+    <h1>{{ quest.title }}</h1>
+    <h2 class="quest-question">{{ quest.question }}</h2>
+
+    {% if attempt %}
+        <p class="attempt-result {% if attempt.is_correct %}result-correct{% else %}result-retry{% endif %}" role="status">
+            {% if attempt.is_correct %}Correct! You earned 1 point for this quest.{% else %}Good try. Change your answer and submit again to retry.{% endif %}
+        </p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button button-primary" type="submit">Check my answer</button>
+        <a class="button button-secondary" href="{% url 'student_quests' %}">Back to quests</a>
+    </form>
+</article>
+{% endblock %}

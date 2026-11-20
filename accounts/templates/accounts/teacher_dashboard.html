@@ -6,8 +6,9 @@
 <section class="welcome-panel teacher-panel">
     <p class="eyebrow">Teacher space</p>
     <h1>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
-    <p>Manage your profile and get ready to guide students through AralQuest.</p>
+    <p>Create simple, one-question quests and check how your students are doing.</p>
     <a class="button button-light" href="{% url 'profile' %}">View or update your profile</a>
+    <a class="button button-light" href="{% url 'teacher_quests' %}">Manage learning quests</a>
 </section>
 <section class="info-grid">
     <article class="info-card">
@@ -15,8 +16,9 @@
         <strong>{{ student_count }}</strong>
     </article>
     <article class="info-card">
-        <span class="card-label">Your role</span>
-        <strong>Teacher</strong>
+        <span class="card-label">Your learning quests</span>
+        <strong>{{ quest_count }}</strong>
+        <a href="{% url 'teacher_quests' %}">Manage your quests</a>
     </article>
 </section>
 {% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Learning quests | AralQuest{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Student space</p>
+        <h1>Choose a learning quest</h1>
+        <p class="muted">{% if grade_level %}Quests for Grade {{ grade_level }}{% else %}Choose from available Grade 3 and Grade 4 quests. Add your grade in your profile to see a tailored list.{% endif %}</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'student_progress' %}">My progress</a>
+</section>
+
+{% if quests %}
+    <section class="quest-grid" aria-label="Available learning quests">
+        {% for quest in quests %}
+            <article class="quest-card">
+                <p class="eyebrow">{{ quest.get_subject_display }} · Grade {{ quest.grade_level }}</p>
+                <h2>{{ quest.title }}</h2>
+                <p>{{ quest.question|truncatewords:22 }}</p>
+                {% if quest.user_attempt %}
+                    <p class="muted">{% if quest.user_attempt.is_correct %}Completed · 1 point{% else %}Tried · give it another go{% endif %}</p>
+                {% endif %}
+                <a class="button button-primary" href="{% url 'quest_play' quest.pk %}">Play quest</a>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="empty-state">
+        <h2>No quests available yet</h2>
+        <p>Your teacher's published quests will show up here.</p>
+    </section>
+{% endif %}
+{% endblock %}

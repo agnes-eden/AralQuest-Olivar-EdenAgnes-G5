@@ -1,0 +1,16 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Delete quest | AralQuest{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <p class="eyebrow">Teacher space</p>
+    <h1>Delete “{{ quest.title }}”?</h1>
+    <p class="muted">This also removes its saved learner results. This action cannot be undone.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="button button-danger" type="submit">Delete quest</button>
+        <a class="button button-secondary" href="{% url 'teacher_quests' %}">Keep quest</a>
+    </form>
+</section>
+{% endblock %}

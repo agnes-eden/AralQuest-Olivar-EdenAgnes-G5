@@ -1,0 +1,17 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ page_title }} | AralQuest{% endblock %}
+
+{% block content %}
+<section class="form-card quest-form-card">
+    <p class="eyebrow">Teacher space</p>
+    <h1>{{ page_title }}</h1>
+    <p class="muted">Write one clear question and four possible answers. Only published quests appear to learners.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button button-primary" type="submit">Save quest</button>
+        <a class="button button-secondary" href="{% url 'teacher_quests' %}">Cancel</a>
+    </form>
+</section>
+{% endblock %}

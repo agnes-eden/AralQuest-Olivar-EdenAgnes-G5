@@ -9,12 +9,13 @@ AralQuest is a Django learning application for Grade 3–4 students and teachers
 - Teacher-created quests in Reading, Language, or Math for Grade 3 or Grade 4
 - Quest create, read, update, and delete screens for the teacher who created each quest
 - Student quest browsing, answering, retries, and personal progress view
-- Teacher results view showing the latest answer for each learner on a teacher's quest
+- Student progress and teacher results views showing saved answer attempts
+- Teacher activity overview listing students who submitted answers to the teacher's quests
 - PostgreSQL persistence through Django models and migrations
 
 ### Progress-tracking scope
 
-Each learner's latest answer is stored per quest. Retrying updates that result; it does not create a full attempt history. Teachers can review answers for quests they created, but the current version does not provide overall scores across all quests or competency/remediation analytics. Offline/PWA functionality is also not included yet.
+Each submitted answer is stored as a separate attempt, including retries. Students can review their attempt history, and teachers can review attempts for quests they created and see a simple cross-quest activity summary. Competency/remediation analytics and offline/PWA functionality are not included yet.
 
 ## User flows
 
@@ -30,9 +31,9 @@ Each learner's latest answer is stored per quest. Retrying updates that result; 
 1. Register an account, then have an administrator assign its profile the Teacher role.
 2. Log in and open **Manage learning quests** from the teacher dashboard.
 3. Create and publish a quest with a subject, grade, question, four distinct answer choices, and the correct answer.
-4. Edit or delete that quest, or open **View results** to review learner answers.
+4. Edit or delete that quest, open **View results** to review answers for one quest, or open **View student activity** to see learners who submitted answers across your quests.
 
-Teachers can only manage their own quests. Students can only play published quests; if a student has a grade set, only quests for that grade are shown. Retrying updates the student's latest saved result for that quest.
+Teachers can only manage their own quests. Students can only play published quests; if a student has a grade set, only quests for that grade are shown. Every valid answer submission is saved as a separate result.
 
 ## Requirements
 

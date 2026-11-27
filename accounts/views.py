@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, F, Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 
@@ -90,6 +90,27 @@ def teacher_dashboard(request):
     return render(request, 'accounts/teacher_dashboard.html', {
         'student_count': student_count,
         'quest_count': LearningQuest.objects.filter(creator=request.user).count(),
+    })
+
+
+@role_required('TEACHER')
+def teacher_activity(request):
+    students = QuestAttempt.objects.filter(
+        quest__creator=request.user,
+        learner__profile__role='STUDENT',
+    ).values(
+        'learner_id',
+        username=F('learner__username'),
+        first_name=F('learner__first_name'),
+        last_name=F('learner__last_name'),
+    ).annotate(
+        quests_attempted=Count('quest_id', distinct=True),
+        attempt_count=Count('pk'),
+        correct_count=Count('pk', filter=Q(is_correct=True)),
+        last_activity=Max('created_at'),
+    ).order_by('-last_activity', 'last_name', 'first_name', 'username')
+    return render(request, 'accounts/teacher_activity.html', {
+        'students': students,
     })
 
 
@@ -193,13 +214,12 @@ def student_quests(request):
     if profile.grade_level:
         quests = quests.filter(grade_level=profile.grade_level)
     quests = list(quests)
-    attempts = {
-        attempt.quest_id: attempt
-        for attempt in QuestAttempt.objects.filter(
-            learner=request.user,
-            quest__in=quests,
-        )
-    }
+    attempts = {}
+    for attempt in QuestAttempt.objects.filter(
+        learner=request.user,
+        quest__in=quests,
+    ).order_by('-created_at', '-pk'):
+        attempts.setdefault(attempt.quest_id, attempt)
     for quest in quests:
         quest.user_attempt = attempts.get(quest.pk)
     return render(request, 'accounts/student_quests.html', {
@@ -225,13 +245,11 @@ def quest_play(request, quest_id):
         form = QuestAnswerForm(request.POST, quest=quest)
         if form.is_valid():
             selected_answer = form.cleaned_data['answer']
-            attempt, _ = QuestAttempt.objects.update_or_create(
+            attempt = QuestAttempt.objects.create(
                 learner=request.user,
                 quest=quest,
-                defaults={
-                    'selected_answer': selected_answer,
-                    'is_correct': selected_answer == quest.correct_answer,
-                },
+                selected_answer=selected_answer,
+                is_correct=selected_answer == quest.correct_answer,
             )
             if attempt.is_correct:
                 messages.success(request, 'Correct! You completed this quest.')
@@ -256,5 +274,5 @@ def student_progress(request):
     attempts = QuestAttempt.objects.filter(
         learner=request.user,
         quest__is_published=True,
-    ).select_related('quest')
+    ).select_related('quest').order_by('created_at', 'pk')
     return render(request, 'accounts/student_progress.html', {'attempts': attempts})

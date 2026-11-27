@@ -16,7 +16,7 @@
     <div class="table-wrap">
         <table class="results-table">
             <thead>
-                <tr><th>Learner</th><th>Answer</th><th>Result</th><th>Last tried</th></tr>
+                <tr><th>Learner</th><th>Answer</th><th>Result</th><th>Attempt time</th></tr>
             </thead>
             <tbody>
                 {% for attempt in attempts %}
@@ -24,7 +24,7 @@
                         <td>{{ attempt.learner.get_full_name|default:attempt.learner.username }}</td>
                         <td>{{ attempt.get_selected_answer_display }}: {% if attempt.selected_answer == 'A' %}{{ quest.choice_a }}{% elif attempt.selected_answer == 'B' %}{{ quest.choice_b }}{% elif attempt.selected_answer == 'C' %}{{ quest.choice_c }}{% else %}{{ quest.choice_d }}{% endif %}</td>
                         <td>{% if attempt.is_correct %}Correct · 1 point{% else %}Try again{% endif %}</td>
-                        <td>{{ attempt.updated_at|date:"M j, Y g:i a" }}</td>
+                        <td>{{ attempt.created_at|date:"M j, Y g:i a" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

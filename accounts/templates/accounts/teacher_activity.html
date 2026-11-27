@@ -1,0 +1,46 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Student activity | AralQuest{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Teacher space</p>
+        <h1>Student activity</h1>
+        <p class="muted">Learners who have submitted answers to your quests.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'teacher_dashboard' %}">Back to dashboard</a>
+</section>
+
+{% if students %}
+    <div class="table-wrap">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Quests attempted</th>
+                    <th>Submissions</th>
+                    <th>Correct answers</th>
+                    <th>Latest activity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                    <tr>
+                        <td>{% if student.first_name or student.last_name %}{{ student.first_name }} {{ student.last_name }}{% else %}{{ student.username }}{% endif %}</td>
+                        <td>{{ student.quests_attempted }}</td>
+                        <td>{{ student.attempt_count }}</td>
+                        <td>{{ student.correct_count }}</td>
+                        <td>{{ student.last_activity|date:"M j, Y g:i a" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <section class="empty-state">
+        <h2>No student activity yet</h2>
+        <p>Students who submit answers to your quests will appear here.</p>
+    </section>
+{% endif %}
+{% endblock %}

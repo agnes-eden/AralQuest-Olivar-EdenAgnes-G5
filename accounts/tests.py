@@ -252,7 +252,7 @@ class LearningQuestTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    def test_student_answer_is_saved_and_only_latest_attempt_is_kept(self):
+    def test_student_answer_history_keeps_each_attempt(self):
         teacher = self.create_user('teacher', 'TEACHER')
         learner = self.create_user('learner', 'STUDENT')
         quest = self.create_quest(teacher)
@@ -260,14 +260,26 @@ class LearningQuestTests(TestCase):
 
         response = self.client.post(reverse('quest_play', args=[quest.pk]), {'answer': 'A'})
         self.assertRedirects(response, reverse('quest_play', args=[quest.pk]))
-        attempt = QuestAttempt.objects.get(learner=learner, quest=quest)
-        self.assertFalse(attempt.is_correct)
+        first_attempt = QuestAttempt.objects.get(learner=learner, quest=quest)
+        self.assertFalse(first_attempt.is_correct)
 
         self.client.post(reverse('quest_play', args=[quest.pk]), {'answer': 'B'})
-        attempt.refresh_from_db()
-        self.assertEqual(attempt.selected_answer, 'B')
-        self.assertTrue(attempt.is_correct)
-        self.assertEqual(QuestAttempt.objects.filter(learner=learner, quest=quest).count(), 1)
+        attempts = QuestAttempt.objects.filter(
+            learner=learner,
+            quest=quest,
+        ).order_by('created_at', 'pk')
+        self.assertEqual(attempts.count(), 2)
+        self.assertEqual(
+            list(attempts.values_list('selected_answer', flat=True)),
+            ['A', 'B'],
+        )
+        self.assertEqual(
+            list(attempts.values_list('is_correct', flat=True)),
+            [False, True],
+        )
+        progress_response = self.client.get(reverse('student_progress'))
+        self.assertContains(progress_response, 'Attempt 1')
+        self.assertContains(progress_response, 'Attempt 2')
 
     def test_roles_and_ownership_are_enforced(self):
         teacher = self.create_user('teacher', 'TEACHER')

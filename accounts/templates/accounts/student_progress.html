@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">Student space</p>
         <h1>My quest progress</h1>
-        <p class="muted">Your latest answer for each quest is saved here.</p>
+        <p class="muted">Every answer is saved here, including retries.</p>
     </div>
     <a class="button button-primary" href="{% url 'student_quests' %}">Explore quests</a>
 </section>
@@ -18,8 +18,8 @@
             <article class="quest-card">
                 <p class="eyebrow">{{ attempt.quest.get_subject_display }} · Grade {{ attempt.quest.grade_level }}</p>
                 <h2>{{ attempt.quest.title }}</h2>
+                <p class="muted">Attempt {{ forloop.counter }} · {{ attempt.created_at|date:"M j, Y g:i a" }}</p>
                 <p>{% if attempt.is_correct %}Correct · 1 point{% else %}Not correct yet · 0 points{% endif %}</p>
-                <p class="muted">Last tried {{ attempt.updated_at|date:"M j, Y" }}</p>
                 <a href="{% url 'quest_play' attempt.quest.pk %}">{% if attempt.is_correct %}Play again{% else %}Try again{% endif %}</a>
             </article>
         {% endfor %}

@@ -1,0 +1,12 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Page not found | AralQuest{% endblock %}
+
+{% block content %}
+<section class="empty-state">
+    <p class="eyebrow">Page not found</p>
+    <h1>We could not find that page.</h1>
+    <p>The link may be incorrect or the page may have moved.</p>
+    <a class="button button-primary" href="{% url 'home' %}">Return to AralQuest</a>
+</section>
+{% endblock %}

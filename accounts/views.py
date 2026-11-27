@@ -18,6 +18,14 @@ from .forms import (
 from .models import LearningQuest, QuestAttempt, UserProfile
 
 
+def page_not_found(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def server_error(request):
+    return render(request, '500.html', status=500)
+
+
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard_redirect')

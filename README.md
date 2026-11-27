@@ -11,6 +11,7 @@ AralQuest is a Django learning application for Grade 3–4 students and teachers
 - Student quest browsing, answering, retries, and personal progress view
 - Student progress and teacher results views showing saved answer attempts
 - Teacher activity overview listing students who submitted answers to the teacher's quests
+- Friendly 404 and 500 error pages that do not expose technical details
 - PostgreSQL persistence through Django models and migrations
 
 ### Progress-tracking scope

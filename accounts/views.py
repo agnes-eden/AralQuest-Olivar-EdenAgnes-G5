@@ -193,13 +193,12 @@ def student_quests(request):
     if profile.grade_level:
         quests = quests.filter(grade_level=profile.grade_level)
     quests = list(quests)
-    attempts = {
-        attempt.quest_id: attempt
-        for attempt in QuestAttempt.objects.filter(
-            learner=request.user,
-            quest__in=quests,
-        )
-    }
+    attempts = {}
+    for attempt in QuestAttempt.objects.filter(
+        learner=request.user,
+        quest__in=quests,
+    ).order_by('-created_at', '-pk'):
+        attempts.setdefault(attempt.quest_id, attempt)
     for quest in quests:
         quest.user_attempt = attempts.get(quest.pk)
     return render(request, 'accounts/student_quests.html', {
@@ -225,13 +224,11 @@ def quest_play(request, quest_id):
         form = QuestAnswerForm(request.POST, quest=quest)
         if form.is_valid():
             selected_answer = form.cleaned_data['answer']
-            attempt, _ = QuestAttempt.objects.update_or_create(
+            attempt = QuestAttempt.objects.create(
                 learner=request.user,
                 quest=quest,
-                defaults={
-                    'selected_answer': selected_answer,
-                    'is_correct': selected_answer == quest.correct_answer,
-                },
+                selected_answer=selected_answer,
+                is_correct=selected_answer == quest.correct_answer,
             )
             if attempt.is_correct:
                 messages.success(request, 'Correct! You completed this quest.')
@@ -256,5 +253,5 @@ def student_progress(request):
     attempts = QuestAttempt.objects.filter(
         learner=request.user,
         quest__is_published=True,
-    ).select_related('quest')
+    ).select_related('quest').order_by('created_at', 'pk')
     return render(request, 'accounts/student_progress.html', {'attempts': attempts})

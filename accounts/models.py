@@ -100,13 +100,7 @@ class QuestAttempt(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('-updated_at',)
-        constraints = [
-            models.UniqueConstraint(
-                fields=('learner', 'quest'),
-                name='one_latest_attempt_per_learner_quest',
-            ),
-        ]
+        ordering = ('-updated_at', '-pk')
 
     def __str__(self):
         return f"{self.learner.username}: {self.quest.title}"

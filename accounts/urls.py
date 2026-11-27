@@ -14,6 +14,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
     path('dashboard/student/', views.student_dashboard, name='student_dashboard'),
     path('dashboard/teacher/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/activity/', views.teacher_activity, name='teacher_activity'),
     path('profile/', views.profile, name='profile'),
     path('teacher/quests/', views.teacher_quests, name='teacher_quests'),
     path('teacher/quests/create/', views.quest_create, name='quest_create'),

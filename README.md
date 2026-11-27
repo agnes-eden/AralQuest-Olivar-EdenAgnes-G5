@@ -10,11 +10,12 @@ AralQuest is a Django learning application for Grade 3–4 students and teachers
 - Quest create, read, update, and delete screens for the teacher who created each quest
 - Student quest browsing, answering, retries, and personal progress view
 - Teacher results view showing the latest answer for each learner on a teacher's quest
+- Teacher activity overview listing students who submitted answers to the teacher's quests
 - PostgreSQL persistence through Django models and migrations
 
 ### Progress-tracking scope
 
-Each learner's latest answer is stored per quest. Retrying updates that result; it does not create a full attempt history. Teachers can review answers for quests they created, but the current version does not provide overall scores across all quests or competency/remediation analytics. Offline/PWA functionality is also not included yet.
+Each learner's latest answer is stored per quest. Retrying updates that result; it does not create a full attempt history. Teachers can review results for quests they created and see a simple cross-quest activity summary of students who submitted answers. Competency/remediation analytics are not included yet. Offline/PWA functionality is also not included yet.
 
 ## User flows
 
@@ -30,7 +31,7 @@ Each learner's latest answer is stored per quest. Retrying updates that result; 
 1. Register an account, then have an administrator assign its profile the Teacher role.
 2. Log in and open **Manage learning quests** from the teacher dashboard.
 3. Create and publish a quest with a subject, grade, question, four distinct answer choices, and the correct answer.
-4. Edit or delete that quest, or open **View results** to review learner answers.
+4. Edit or delete that quest, open **View results** to review answers for one quest, or open **View student activity** to see learners who submitted answers across your quests.
 
 Teachers can only manage their own quests. Students can only play published quests; if a student has a grade set, only quests for that grade are shown. Retrying updates the student's latest saved result for that quest.
 

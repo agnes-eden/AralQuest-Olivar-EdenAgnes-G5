@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, F, Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 
@@ -90,6 +90,27 @@ def teacher_dashboard(request):
     return render(request, 'accounts/teacher_dashboard.html', {
         'student_count': student_count,
         'quest_count': LearningQuest.objects.filter(creator=request.user).count(),
+    })
+
+
+@role_required('TEACHER')
+def teacher_activity(request):
+    students = QuestAttempt.objects.filter(
+        quest__creator=request.user,
+        learner__profile__role='STUDENT',
+    ).values(
+        'learner_id',
+        username=F('learner__username'),
+        first_name=F('learner__first_name'),
+        last_name=F('learner__last_name'),
+    ).annotate(
+        quests_attempted=Count('quest_id', distinct=True),
+        attempt_count=Count('pk'),
+        correct_count=Count('pk', filter=Q(is_correct=True)),
+        last_activity=Max('created_at'),
+    ).order_by('-last_activity', 'last_name', 'first_name', 'username')
+    return render(request, 'accounts/teacher_activity.html', {
+        'students': students,
     })
 
 

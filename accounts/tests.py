@@ -201,6 +201,57 @@ class LearningQuestTests(TestCase):
         self.assertRedirects(response, reverse('teacher_quests'))
         self.assertFalse(LearningQuest.objects.filter(pk=quest.pk).exists())
 
+    def test_teacher_activity_summarizes_students_on_only_their_quests(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        other_teacher = self.create_user('other_teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        other_learner = self.create_user('other_learner', 'STUDENT')
+        first_quest = self.create_quest(teacher)
+        second_quest = self.create_quest(
+            teacher,
+            title='A Reading Quest',
+            subject='READING',
+        )
+        other_quest = self.create_quest(other_teacher, title='Another Teacher Quest')
+
+        QuestAttempt.objects.create(
+            learner=learner,
+            quest=first_quest,
+            selected_answer='B',
+            is_correct=True,
+        )
+        QuestAttempt.objects.create(
+            learner=learner,
+            quest=second_quest,
+            selected_answer='A',
+            is_correct=False,
+        )
+        QuestAttempt.objects.create(
+            learner=other_learner,
+            quest=other_quest,
+            selected_answer='B',
+            is_correct=True,
+        )
+        self.client.force_login(teacher)
+
+        response = self.client.get(reverse('teacher_activity'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, learner.username)
+        self.assertNotContains(response, other_learner.username)
+        activity = response.context['students'].get()
+        self.assertEqual(activity['quests_attempted'], 2)
+        self.assertEqual(activity['attempt_count'], 2)
+        self.assertEqual(activity['correct_count'], 1)
+
+    def test_student_cannot_view_teacher_activity(self):
+        learner = self.create_user('learner', 'STUDENT')
+        self.client.force_login(learner)
+
+        response = self.client.get(reverse('teacher_activity'))
+
+        self.assertEqual(response.status_code, 302)
+
     def test_student_answer_is_saved_and_only_latest_attempt_is_kept(self):
         teacher = self.create_user('teacher', 'TEACHER')
         learner = self.create_user('learner', 'STUDENT')

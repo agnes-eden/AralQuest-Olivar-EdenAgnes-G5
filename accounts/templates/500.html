@@ -1,0 +1,12 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Something went wrong | AralQuest{% endblock %}
+
+{% block content %}
+<section class="empty-state">
+    <p class="eyebrow">Unexpected error</p>
+    <h1>We could not complete your request.</h1>
+    <p>Please try again in a moment. No technical details are shown here.</p>
+    <a class="button button-primary" href="{% url 'home' %}">Return to AralQuest</a>
+</section>
+{% endblock %}

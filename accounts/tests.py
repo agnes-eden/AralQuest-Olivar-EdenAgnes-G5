@@ -1,11 +1,22 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
-from django.urls import reverse
+from django.urls import include, path, reverse
 
 from .models import LearningQuest, QuestAttempt, UserProfile
+from .views import server_error
 
 
 User = get_user_model()
+
+
+def _test_only_server_error(request):
+    raise RuntimeError('Test-only error')
+
+
+urlpatterns = [
+    path('', include('accounts.urls')),
+    path('__test-error__/', _test_only_server_error),
+]
 
 
 class AccountFeatureTests(TestCase):
@@ -252,6 +263,40 @@ class LearningQuestTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
+    @override_settings(DEBUG=False)
+    def test_unknown_url_uses_custom_404_page(self):
+        response = self.client.get('/this-page-does-not-exist/')
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+        self.assertContains(response, 'We could not find that page.', status_code=404)
+
+    def test_server_error_page_shows_generic_message_without_traceback(self):
+        from django.test import RequestFactory
+
+        response = server_error(RequestFactory().get('/'))
+
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(
+            response,
+            'We could not complete your request.',
+            status_code=500,
+        )
+        self.assertNotContains(response, 'Traceback', status_code=500)
+
+    def test_invalid_quest_ids_return_404(self):
+        teacher = self.create_user('teacher', 'TEACHER')
+        learner = self.create_user('learner', 'STUDENT')
+        self.client.force_login(teacher)
+
+        for route_name in ('quest_edit', 'quest_delete', 'quest_results'):
+            response = self.client.get(reverse(route_name, args=[999999]))
+            self.assertEqual(response.status_code, 404)
+
+        self.client.force_login(learner)
+        response = self.client.get(reverse('quest_play', args=[999999]))
+        self.assertEqual(response.status_code, 404)
+
     def test_student_answer_history_keeps_each_attempt(self):
         teacher = self.create_user('teacher', 'TEACHER')
         learner = self.create_user('learner', 'STUDENT')
@@ -359,3 +404,33 @@ class LearningQuestTests(TestCase):
         self.assertNotContains(quests_response, unpublished_quest.title)
         progress_response = self.client.get(reverse('student_progress'))
         self.assertNotContains(progress_response, grade_three_quest.title)
+
+
+class ErrorPageTests(TestCase):
+    @override_settings(DEBUG=False)
+    def test_nonexistent_quest_id_returns_custom_404(self):
+        learner = User.objects.create_user(
+            username='missing_quest_learner',
+            password='Safe-Test-Password-519!',
+        )
+        UserProfile.objects.create(
+            user=learner,
+            role='STUDENT',
+            grade_level=3,
+        )
+        self.client.force_login(learner)
+
+        response = self.client.get(reverse('quest_play', args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+
+    @override_settings(DEBUG=False, ROOT_URLCONF=__name__)
+    def test_custom_500_page_is_rendered(self):
+        self.client.raise_request_exception = False
+
+        response = self.client.get('/__test-error__/')
+
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(response, 'Something went wrong', status_code=500)
+        self.assertNotContains(response, 'Traceback', status_code=500)

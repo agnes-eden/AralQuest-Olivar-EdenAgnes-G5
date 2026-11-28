@@ -1,0 +1,11 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Something went wrong | AralQuest{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <h1>Something went wrong</h1>
+    <p class="muted">We could not complete that request. Please try again later.</p>
+    <a class="button button-primary" href="{% url 'home' %}">Return to AralQuest</a>
+</section>
+{% endblock %}
